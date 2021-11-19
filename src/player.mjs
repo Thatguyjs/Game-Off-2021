@@ -59,23 +59,14 @@ class Player {
 		if(this.velocity.mag() > 1)
 			this.velocity.normalize();
 
-		this.position.x += this.velocity.x * 2;
-		this.position.y += this.velocity.y * 2;
+		this.position.add(this.velocity.copy().mult(2));
 		this.rotation = (this.rotation + this.rot_vel) % 360;
 
 		if(this.rotation < 0)
 			this.rotation += 360;
 
-		this.velocity.x /= 1.02;
-		this.velocity.y /= 1.02;
+		this.velocity.div(1.02);
 		this.rot_vel /= 1.06;
-	}
-
-	// Apply velocity relative to a rotation
-	apply_rot_vel(velocity, rotation) {
-		const vel_dir = polar_to_cart(rotation, velocity);
-		this.velocity.x += vel_dir.x;
-		this.velocity.y += vel_dir.y;
 	}
 
 
