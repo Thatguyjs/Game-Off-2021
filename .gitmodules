@@ -1,3 +1,3 @@
 [submodule "twgl.js"]
-	path = src/twgl.js
+	path = src/include/twgl.js
 	url = https://github.com/greggman/twgl.js.git

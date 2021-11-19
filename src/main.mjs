@@ -1,3 +1,7 @@
+import Vec2 from "./include/vec2.mjs";
+import Player from "./player.mjs";
+
+
 const canvas = document.getElementById("cnv");
 const gl = canvas.getContext("webgl2");
 
@@ -10,24 +14,21 @@ const program = twgl.createProgramInfo(
 	]
 );
 
+const player = new Player(new Vec2(window.innerWidth / 2, window.innerHeight / 2));
+
 const attribs = {
-	position: { numComponents: 2, data: [
-		10, 10,
-		30, 10,
-		10, 30,
-		30, 30
-	]},
+	position: { numComponents: 2, data: player.get_points() },
 
 	color: [
-		1, 0, 0, 1,
-		1, 0, 1, 1,
-		0, 1, 0, 1,
-		0, 0, 1, 1
+		1, 1, 1, 1,
+		1, 1, 1, 1,
+		1, 1, 1, 1,
+		1, 1, 1, 1
 	],
 
 	indices: [
-		0, 1, 2,
-		1, 2, 3
+		0, 1, 3,
+		0, 2, 3
 	]
 };
 
@@ -49,6 +50,9 @@ function render() {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
+	player.update();
+
+	attribs.position.data = player.get_points();
 	buffers = twgl.createBufferInfoFromArrays(gl, attribs);
 
 	gl.viewport(0, 0, canvas.width, canvas.height);
@@ -64,18 +68,3 @@ function render() {
 }
 
 window.requestAnimationFrame(render);
-
-
-window.onmousemove = (ev) => {
-	attribs.position.data[0] = ev.clientX;
-	attribs.position.data[1] = ev.clientY;
-
-	attribs.position.data[2] = ev.clientX + 20;
-	attribs.position.data[3] = ev.clientY;
-
-	attribs.position.data[4] = ev.clientX;
-	attribs.position.data[5] = ev.clientY + 20;
-
-	attribs.position.data[6] = ev.clientX + 20;
-	attribs.position.data[7] = ev.clientY + 20;
-}
