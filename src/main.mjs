@@ -1,5 +1,4 @@
-import Vec2 from "./include/vec2.mjs";
-import Player from "./player.mjs";
+import Game from "./game.mjs";
 
 
 const canvas = document.getElementById("cnv");
@@ -14,10 +13,14 @@ const program = twgl.createProgramInfo(
 	]
 );
 
-const player = new Player(new Vec2(window.innerWidth / 2, window.innerHeight / 2));
+Game.init(gl, program, {
+	viewport: [window.innerWidth, window.innerHeight],
+	world_mat: twgl.m4.identity(),
+	model_mat: twgl.m4.identity()
+});
 
 const attribs = {
-	position: { numComponents: 2, data: player.get_points() },
+	position: { numComponents: 2, data: Game.player.get_points() },
 
 	color: [
 		1, 1, 1, 1,
@@ -50,19 +53,20 @@ function render() {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
-	player.update();
+	Game.update();
+	Game.render();
 
-	attribs.position.data = player.get_points();
-	buffers = twgl.createBufferInfoFromArrays(gl, attribs);
-
-	gl.viewport(0, 0, canvas.width, canvas.height);
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-	gl.useProgram(program.program);
-	twgl.setBuffersAndAttributes(gl, program, buffers);
-	twgl.setUniforms(program, uniforms);
-
-	twgl.drawBufferInfo(gl, gl.TRIANGLES, buffers);
+	// attribs.position.data = Game.player.get_points();
+	// buffers = twgl.createBufferInfoFromArrays(gl, attribs);
+    // 
+	// gl.viewport(0, 0, canvas.width, canvas.height);
+	// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    // 
+	// gl.useProgram(program.program);
+	// twgl.setBuffersAndAttributes(gl, program, buffers);
+	// twgl.setUniforms(program, uniforms);
+    // 
+	// twgl.drawBufferInfo(gl, gl.TRIANGLES, buffers);
 
 	window.requestAnimationFrame(render);
 }

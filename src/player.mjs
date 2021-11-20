@@ -69,13 +69,13 @@ class Player {
 		for(let p = 0; p < 8; p += 2) {
 			const x_result = this.collide_walls(new Vec2(points[p], points[p + 1]), 'x');
 			if(x_result[0]) {
-				this.velocity.x = -this.velocity.x * 0.9;
+				this.velocity.x = -this.velocity.x * 0.8;
 				this.position.x += x_result[1];
 			}
 
 			const y_result = this.collide_walls(new Vec2(points[p], points[p + 1]), 'y');
 			if(y_result[0]) {
-				this.velocity.y = -this.velocity.y * 0.9;
+				this.velocity.y = -this.velocity.y * 0.8;
 				this.position.y += y_result[1];
 			}
 		}
