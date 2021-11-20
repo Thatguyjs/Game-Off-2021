@@ -59,14 +59,47 @@ class Player {
 		if(this.velocity.mag() > 1)
 			this.velocity.normalize();
 
-		this.position.add(this.velocity.copy().mult(2));
+		this.position.add(this.velocity.copy().mult(2.4));
 		this.rotation = (this.rotation + this.rot_vel) % 360;
 
 		if(this.rotation < 0)
 			this.rotation += 360;
 
-		this.velocity.div(1.02);
+		const points = this.get_points();
+		for(let p = 0; p < 8; p += 2) {
+			const x_result = this.collide_walls(new Vec2(points[p], points[p + 1]), 'x');
+			if(x_result[0]) {
+				this.velocity.x = -this.velocity.x * 0.9;
+				this.position.x += x_result[1];
+			}
+
+			const y_result = this.collide_walls(new Vec2(points[p], points[p + 1]), 'y');
+			if(y_result[0]) {
+				this.velocity.y = -this.velocity.y * 0.9;
+				this.position.y += y_result[1];
+			}
+		}
+
+		this.velocity.div(1.015);
 		this.rot_vel /= 1.06;
+	}
+
+	// Collide with the edges of the screen
+	collide_walls(point, axis) {
+		if(axis === 'x') {
+			if(point.x < 0)
+				return [true, -point.x];
+			if(point.x > window.innerWidth)
+				return [true, window.innerWidth - point.x];
+		}
+		else {
+			if(point.y < 0)
+				return [true, -point.y];
+			if(point.y > window.innerHeight)
+				return [true, window.innerHeight - point.y];
+		}
+
+		return [false];
 	}
 
 
