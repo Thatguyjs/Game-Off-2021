@@ -56,18 +56,6 @@ function render() {
 	Game.update();
 	Game.render();
 
-	// attribs.position.data = Game.player.get_points();
-	// buffers = twgl.createBufferInfoFromArrays(gl, attribs);
-    // 
-	// gl.viewport(0, 0, canvas.width, canvas.height);
-	// gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    // 
-	// gl.useProgram(program.program);
-	// twgl.setBuffersAndAttributes(gl, program, buffers);
-	// twgl.setUniforms(program, uniforms);
-    // 
-	// twgl.drawBufferInfo(gl, gl.TRIANGLES, buffers);
-
 	window.requestAnimationFrame(render);
 }
 
