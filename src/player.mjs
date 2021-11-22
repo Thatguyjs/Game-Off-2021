@@ -104,28 +104,25 @@ class Player {
 			this.velocity.add(force_dir.mult(void_force));
 		*/
 
-		this.position.add(this.velocity.copy().mult(2.4));
+		let points = null;
+
+		this.position.x += this.velocity.x * 2.4;
+		points = this.get_points();
+
+		for(let p = 0; p < 8; p += 2)
+			if(this.collide_walls(new Vec2(points[p], points[p + 1]), [1, 0], walls)) break;
+
+		this.position.y += this.velocity.y * 2.4;
+		points = this.get_points();
+
+		for(let p = 0; p < 8; p += 2)
+			if(this.collide_walls(new Vec2(points[p], points[p + 1]), [0, 1], walls)) break;
+
+		// this.position.add(this.velocity.copy().mult(2.4));
 		this.rotation = (this.rotation + this.rot_vel) % 360;
 
 		if(this.rotation < 0)
 			this.rotation += 360;
-
-		let points = this.get_points();
-		for(let p = 0; p < 8; p += 2) {
-			const x_result = this.collide_walls(new Vec2(points[p], points[p + 1]), [1, 0], walls);
-			if(x_result[0]) {
-				this.velocity.x = -this.velocity.x * 0.8;
-				this.position.x += x_result[1];
-				points = this.get_points();
-			}
-
-			const y_result = this.collide_walls(new Vec2(points[p], points[p + 1]), [0, 1], walls);
-			if(y_result[0]) {
-				this.velocity.y = -this.velocity.y * 0.8;
-				this.position.y += y_result[1];
-				points = this.get_points();
-			}
-		}
 
 		if(this.bug) {
 			this.bug.position.x = this.position.x;
@@ -145,42 +142,31 @@ class Player {
 	collide_walls(point, vel_mult, walls) {
 		const vel = this.velocity.copy().mult(vel_mult[0], vel_mult[1]);
 
-		if(axis === 'x') {
-			if(point.x < 0)
-				return [true, -point.x];
-			if(point.x > window.innerWidth)
-				return [true, window.innerWidth - point.x];
-
-			for(let w in walls) {
-				const wall = walls[w];
-
-				if(point.x > wall.x && point.x < wall.x + wall.width && point.y > wall.y && point.y < wall.y + wall.height) {
-					if(this.velocity.x > 0)
-						return [true, wall.x - point.x];
-					else
-						return [true, wall.x + wall.width - point.x];
+		for(let w in walls) {
+			if(point_box_collision(point, walls[w])) {
+				if(this.position.x < walls[w].x) {
+					this.velocity.x *= -0.8;
+					this.position.x += walls[w].x - point.x;
 				}
-			}
-		}
-		else {
-			if(point.y < 0)
-				return [true, -point.y];
-			if(point.y > window.innerHeight)
-				return [true, window.innerHeight - point.y];
-
-			for(let w in walls) {
-				const wall = walls[w];
-
-				if(point.x > wall.x && point.x < wall.x + wall.width && point.y > wall.y && point.y < wall.y + wall.height) {
-					if(this.velocity.y > 0)
-						return [true, wall.y - point.y];
-					else
-						return [true, wall.y + wall.height - point.y];
+				if(this.position.x > walls[w].x + walls[w].width) {
+					this.velocity.x *= -0.8;
+					this.position.x += walls[w].x + walls[w].width - point.x;
 				}
+
+				if(this.position.y < walls[w].y) {
+					this.velocity.y *= -0.8;
+					this.position.y += walls[w].y - point.y;
+				}
+				if(this.position.y > walls[w].y + walls[w].height) {
+					this.velocity.y *= -0.8;
+					this.position.y += walls[w].y + walls[w].height - point.y;
+				}
+
+				return true;
 			}
 		}
 
-		return [false];
+		return false;
 	}
 
 
