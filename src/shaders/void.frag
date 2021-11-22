@@ -6,14 +6,14 @@ in vec2 f_position;
 in float f_size;
 in vec3 f_color;
 
-uniform vec2 f_viewport;
+uniform vec2 viewport;
 
 out vec4 out_color;
 
 void main() {
-	vec2 uv = gl_FragCoord.xy / f_viewport * 2.0 - 1.0 - f_position;
+	vec2 uv = gl_FragCoord.xy / viewport * 2.0 - 1.0 - f_position;
 
-	float aspect = f_viewport.x / f_viewport.y;
+	float aspect = viewport.x / viewport.y;
 	uv.x *= aspect;
 
 	float dist = f_size - length(uv);

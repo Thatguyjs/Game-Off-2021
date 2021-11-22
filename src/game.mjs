@@ -21,7 +21,7 @@ const Game = {
 	bugs: [],
 
 	void: {
-		position: { numComponents: 2, data: null },
+		position: { numComponents: 2, data: new Float32Array([window.innerWidth / 2, window.innerHeight / 2]) },
 		size: { numComponents: 1, data: new Float32Array([80]) }
 	},
 
@@ -37,11 +37,6 @@ const Game = {
 
 		for(let i = 0; i < 10; i++)
 			this.bugs.push(new Bug(new Vec2(Math.random() * window.innerWidth, Math.random() * window.innerHeight)));
-
-		this.void.position.data = new Float32Array([
-			window.innerWidth / 2,
-			window.innerHeight / 2
-		]);
 	},
 
 	// Assigns a bug to the player if once is close enough
@@ -107,15 +102,9 @@ const Game = {
 
 		// Render the void
 		this.gl.useProgram(this.void_program.program);
-		twgl.setUniforms(this.void_program, {
-			viewport: [window.innerWidth, window.innerHeight],
-			f_viewport: [window.innerWidth, window.innerHeight],
-			world_mat: twgl.m4.identity(),
-			model_mat: twgl.m4.identity()
-		});
+		twgl.setUniforms(this.void_program, this.uniforms);
 
 		const void_buffers = twgl.createBufferInfoFromArrays(this.gl, this.void);
-
 		twgl.setBuffersAndAttributes(this.gl, this.void_program, void_buffers);
 		twgl.drawBufferInfo(this.gl, this.gl.POINTS, void_buffers);
 	}
