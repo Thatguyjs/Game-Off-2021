@@ -11,7 +11,23 @@ function polar_to_cart(angle, radius, mode=RADIANS) {
 }
 
 
+function point_box_collision(point, box) {
+	if(point.x > box.x && point.x < box.x + box.width && point.y > box.y && point.y < box.y + box.height)
+		return true;
+
+	return false;
+}
+
+
 class Player {
+	static Modifiers = {
+		NONE: 0,
+		NO_CONTROL: 1,
+		REVERSE_CONTROLS: 2
+	};
+
+	modifier = Player.NONE;
+
 	// Each point is described by an angle and radius
 	#points = [
 		270, 17, // Front
@@ -45,24 +61,34 @@ class Player {
 		window.removeEventListener('keyup', this.#keyup.bind(this));
 	}
 
-	update(void_info) {
-		let apply_vel = 0; // Forwards / backwards velocity
+	update(walls) {
+		if(this.modifier !== Player.Modifiers.NO_CONTROL) {
+			let apply_vel = 0; // Forwards / backwards velocity
+			let apply_rot = 0; // Rotational velocity
 
-		if(this.#keys.forward)
-			apply_vel += 0.1;
-		if(this.#keys.backward)
-			apply_vel -= 0.1;
+			if(this.#keys.forward)
+				apply_vel += 0.1;
+			if(this.#keys.backward)
+				apply_vel -= 0.1;
 
-		this.velocity.add(polar_to_cart(this.rotation - 90, apply_vel, DEGREES).div(3));
+			if(this.#keys.rot_left)
+				apply_rot -= 0.25;
+			if(this.#keys.rot_right)
+				apply_rot += 0.25;
 
-		if(this.#keys.rot_left)
-			this.rot_vel -= 0.25;
-		if(this.#keys.rot_right)
-			this.rot_vel += 0.25;
+			if(this.modifier === Player.Modifiers.REVERSE_CONTROLS) {
+				apply_vel = -apply_vel;
+				apply_rot = -apply_rot;
+			}
 
-		// if(this.velocity.mag() > 1)
-		// 	this.velocity.normalize();
+			this.velocity.add(polar_to_cart(this.rotation - 90, apply_vel, DEGREES).div(3));
+			this.rot_vel += apply_rot;
+		}
 
+		if(this.velocity.mag() > 1)
+			this.velocity.normalize();
+
+		/*
 		const void_dist = (new Vec2(
 			void_info.position.data[0] - this.position.x,
 			void_info.position.data[1] - this.position.y
@@ -76,6 +102,7 @@ class Player {
 
 		if(void_dist.mag() < window.innerHeight)
 			this.velocity.add(force_dir.mult(void_force));
+		*/
 
 		this.position.add(this.velocity.copy().mult(2.4));
 		this.rotation = (this.rotation + this.rot_vel) % 360;
@@ -83,18 +110,20 @@ class Player {
 		if(this.rotation < 0)
 			this.rotation += 360;
 
-		const points = this.get_points();
+		let points = this.get_points();
 		for(let p = 0; p < 8; p += 2) {
-			const x_result = this.collide_walls(new Vec2(points[p], points[p + 1]), 'x');
+			const x_result = this.collide_walls(new Vec2(points[p], points[p + 1]), [1, 0], walls);
 			if(x_result[0]) {
 				this.velocity.x = -this.velocity.x * 0.8;
 				this.position.x += x_result[1];
+				points = this.get_points();
 			}
 
-			const y_result = this.collide_walls(new Vec2(points[p], points[p + 1]), 'y');
+			const y_result = this.collide_walls(new Vec2(points[p], points[p + 1]), [0, 1], walls);
 			if(y_result[0]) {
 				this.velocity.y = -this.velocity.y * 0.8;
 				this.position.y += y_result[1];
+				points = this.get_points();
 			}
 		}
 
@@ -107,19 +136,48 @@ class Player {
 		this.rot_vel /= 1.06;
 	}
 
-	// Collide with the edges of the screen
-	collide_walls(point, axis) {
+	random_modifier() {
+		const names = Object.keys(Player.Modifiers);
+		return Player.Modifiers[names[Math.floor(Math.random() * names.length)]];
+	}
+
+	// Collide with the edges of the screen and walls
+	collide_walls(point, vel_mult, walls) {
+		const vel = this.velocity.copy().mult(vel_mult[0], vel_mult[1]);
+
 		if(axis === 'x') {
 			if(point.x < 0)
 				return [true, -point.x];
 			if(point.x > window.innerWidth)
 				return [true, window.innerWidth - point.x];
+
+			for(let w in walls) {
+				const wall = walls[w];
+
+				if(point.x > wall.x && point.x < wall.x + wall.width && point.y > wall.y && point.y < wall.y + wall.height) {
+					if(this.velocity.x > 0)
+						return [true, wall.x - point.x];
+					else
+						return [true, wall.x + wall.width - point.x];
+				}
+			}
 		}
 		else {
 			if(point.y < 0)
 				return [true, -point.y];
 			if(point.y > window.innerHeight)
 				return [true, window.innerHeight - point.y];
+
+			for(let w in walls) {
+				const wall = walls[w];
+
+				if(point.x > wall.x && point.x < wall.x + wall.width && point.y > wall.y && point.y < wall.y + wall.height) {
+					if(this.velocity.y > 0)
+						return [true, wall.y - point.y];
+					else
+						return [true, wall.y + wall.height - point.y];
+				}
+			}
 		}
 
 		return [false];
