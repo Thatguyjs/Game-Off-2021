@@ -9,7 +9,9 @@ uniform vec2 viewport;
 uniform mat4 world_mat;
 uniform mat4 model_mat;
 
-out vec4 frag_color;
+out vec2 f_position;
+out float f_size;
+out vec3 f_color;
 
 vec2 screen_to_gl_coord(vec2 pos) {
 	vec2 half_viewport = viewport / 2.0;
@@ -22,5 +24,9 @@ vec2 screen_to_gl_coord(vec2 pos) {
 
 void main() {
 	gl_Position = world_mat * model_mat * vec4(screen_to_gl_coord(position), 0.0, 1.0);
-	frag_color = vec4(0, 0, 0, 1);
+	gl_PointSize = size * viewport.y;
+
+	f_position = screen_to_gl_coord(position);
+	f_size = size / min(viewport.x, viewport.y) * 2.0;
+	f_color = vec3(0, 0, 0);
 }

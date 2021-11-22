@@ -5,7 +5,7 @@ const canvas = document.getElementById("cnv");
 const gl = canvas.getContext("webgl2");
 
 
-const program = twgl.createProgramInfo(
+const color_program = twgl.createProgramInfo(
 	gl,
 	[
 		await (await fetch('shaders/color.vert')).text(),
@@ -13,35 +13,19 @@ const program = twgl.createProgramInfo(
 	]
 );
 
-Game.init(gl, program, {
+const void_program = twgl.createProgramInfo(
+	gl,
+	[
+		await (await fetch('shaders/void.vert')).text(),
+		await (await fetch('shaders/void.frag')).text()
+	]
+);
+
+Game.init(gl, { color: color_program, void: void_program }, {
 	viewport: [window.innerWidth, window.innerHeight],
 	world_mat: twgl.m4.identity(),
 	model_mat: twgl.m4.identity()
 });
-
-const attribs = {
-	position: { numComponents: 2, data: Game.player.get_points() },
-
-	color: [
-		1, 1, 1, 1,
-		1, 1, 1, 1,
-		1, 1, 1, 1,
-		1, 1, 1, 1
-	],
-
-	indices: [
-		0, 1, 3,
-		0, 2, 3
-	]
-};
-
-let buffers = twgl.createBufferInfoFromArrays(gl, attribs);
-
-const uniforms = {
-	viewport: [window.innerWidth, window.innerHeight],
-	world_mat: twgl.m4.identity(),
-	model_mat: twgl.m4.identity()
-};
 
 
 gl.clearColor(0.063, 0.063, 0.063, 1);

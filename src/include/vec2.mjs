@@ -41,6 +41,21 @@ class Vec2 {
 		return this;
 	}
 
+	pow(x, y) {
+		if(x instanceof Vec2)
+			return this.pow(x.x, x.y);
+
+		this.x **= x;
+		this.y **= y ?? x;
+		return this;
+	}
+
+	abs() {
+		this.x = Math.abs(this.x);
+		this.y = Math.abs(this.y);
+		return this;
+	}
+
 	mag() {
 		return Math.sqrt(this.x ** 2 + this.y ** 2);
 	}

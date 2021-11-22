@@ -1,4 +1,5 @@
 import Vec2 from "./include/vec2.mjs";
+import Game from "./game.mjs";
 
 
 const RADIANS = 1;
@@ -23,8 +24,11 @@ class Player {
 		forward: false,
 		backward: false,
 		rot_left: false,
-		rot_right: false
+		rot_right: false,
+		interact: false
 	};
+
+	bug = null; // Bug that the player is carrying
 
 	constructor(position, rotation, velocity) {
 		this.position = position ?? new Vec2();
@@ -41,7 +45,7 @@ class Player {
 		window.removeEventListener('keyup', this.#keyup.bind(this));
 	}
 
-	update() {
+	update(void_info) {
 		let apply_vel = 0; // Forwards / backwards velocity
 
 		if(this.#keys.forward)
@@ -56,8 +60,22 @@ class Player {
 		if(this.#keys.rot_right)
 			this.rot_vel += 0.25;
 
-		if(this.velocity.mag() > 1)
-			this.velocity.normalize();
+		// if(this.velocity.mag() > 1)
+		// 	this.velocity.normalize();
+
+		const void_dist = (new Vec2(
+			void_info.position.data[0] - this.position.x,
+			void_info.position.data[1] - this.position.y
+		));
+
+		const void_force = (window.innerWidth - void_dist.mag()) / window.innerWidth;
+		const force_dir = polar_to_cart(Math.atan2(void_dist.y, void_dist.x), 0.023);
+
+		if(void_dist.mag() < void_info.size.data[0] + 8)
+			force_dir.mult(2);
+
+		if(void_dist.mag() < window.innerHeight)
+			this.velocity.add(force_dir.mult(void_force));
 
 		this.position.add(this.velocity.copy().mult(2.4));
 		this.rotation = (this.rotation + this.rot_vel) % 360;
@@ -78,6 +96,11 @@ class Player {
 				this.velocity.y = -this.velocity.y * 0.8;
 				this.position.y += y_result[1];
 			}
+		}
+
+		if(this.bug) {
+			this.bug.position.x = this.position.x;
+			this.bug.position.y = this.position.y;
 		}
 
 		this.velocity.div(1.015);
@@ -121,6 +144,14 @@ class Player {
 			case 'KeyD':
 				this.#keys.rot_right = true;
 				break;
+			case 'KeyE':
+			case 'Space':
+				if(!this.#keys.interact) {
+					if(!this.bug) Game.pickup_bug();
+					else Game.drop_bug();
+				}
+				this.#keys.interact = true;
+				break;
 		}
 	}
 
@@ -141,6 +172,10 @@ class Player {
 			case 'ArrowRight':
 			case 'KeyD':
 				this.#keys.rot_right = false;
+				break;
+			case 'KeyE':
+			case 'Space':
+				this.#keys.interact = false;
 				break;
 		}
 	}

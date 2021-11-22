@@ -6,7 +6,7 @@ import Bug from "./bug.mjs";
 const Game = {
 	gl: null,
 	color_program: null,
-	circle_program: null,
+	void_program: null,
 	uniforms: null,
 
 	paused: false,
@@ -22,16 +22,16 @@ const Game = {
 
 	void: {
 		position: { numComponents: 2, data: null },
-		color: { numComponents: 4, data: [ 0, 0, 0, 1 ]}
+		size: { numComponents: 1, data: new Float32Array([80]) }
 	},
 
-	init(gl, color_program, circle_program, uniforms) {
+	init(gl, programs, uniforms) {
 		this.gl = gl;
-		this.color_program = color_program;
-		this.circle_program = circle_program;
+		this.color_program = programs.color;
+		this.void_program = programs.void;
 		this.uniforms = uniforms;
 
-		this.player = new Player(new Vec2(window.innerWidth / 2, window.innerHeight / 2));
+		this.player = new Player(new Vec2(window.innerWidth / 2, window.innerHeight / 4));
 		this.player_attribs.position.data = this.player.get_points();
 		this.player_attribs.color.data = (new Float32Array(16)).fill(1.0);
 
@@ -44,11 +44,33 @@ const Game = {
 		]);
 	},
 
+	// Assigns a bug to the player if once is close enough
+	pickup_bug() {
+		const player_pos = this.player.position;
+
+		for(let b in this.bugs) {
+			const bug_pos = this.bugs[b].position;
+
+			if(bug_pos.x > player_pos.x - 30 && bug_pos.x < player_pos.x + 30 &&
+				bug_pos.y > player_pos.y - 30 && bug_pos.y < player_pos.y + 30) {
+				this.player.bug = this.bugs[b];
+			}
+		}
+	},
+
+	// Drop the bug that the player has, copy the player's velocity to the bug
+	drop_bug() {
+		if(!this.player.bug) return;
+
+		this.player.bug.velocity = this.player.velocity.copy().mult(2.4);
+		this.player.bug = null;
+	},
+
 	update() {
-		this.player.update();
+		this.player.update(this.void);
 
 		for(let b in this.bugs)
-			this.bugs[b].update();
+			this.bugs[b].update(this.void);
 	},
 
 	render() {
@@ -80,14 +102,21 @@ const Game = {
 		}
 
 		const bug_buffers = twgl.createBufferInfoFromArrays(this.gl, total_attrs);
-		twgl.setBuffersAndAttributes(this.gl, this.program_info, bug_buffers);
+		twgl.setBuffersAndAttributes(this.gl, this.color_program, bug_buffers);
 		twgl.drawBufferInfo(this.gl, this.gl.TRIANGLES, bug_buffers);
 
 		// Render the void
-		this.gl.useProgram(this.circle_program.program);
+		this.gl.useProgram(this.void_program.program);
+		twgl.setUniforms(this.void_program, {
+			viewport: [window.innerWidth, window.innerHeight],
+			f_viewport: [window.innerWidth, window.innerHeight],
+			world_mat: twgl.m4.identity(),
+			model_mat: twgl.m4.identity()
+		});
 
 		const void_buffers = twgl.createBufferInfoFromArrays(this.gl, this.void);
-		twgl.setBuffersAndAttributes(this.gl, this.program_info, void_buffers);
+
+		twgl.setBuffersAndAttributes(this.gl, this.void_program, void_buffers);
 		twgl.drawBufferInfo(this.gl, this.gl.POINTS, void_buffers);
 	}
 };
