@@ -142,6 +142,7 @@ class Player {
 	collide_walls(point, vel_mult, walls) {
 		const vel = this.velocity.copy().mult(vel_mult[0], vel_mult[1]);
 
+		// Placed walls
 		for(let w in walls) {
 			if(point_box_collision(point, walls[w])) {
 				if(this.position.x < walls[w].x) {
@@ -164,6 +165,35 @@ class Player {
 
 				return true;
 			}
+		}
+
+		// Edges of the screen
+		let edge_collision = [false, false];
+
+		if(point.x < 0) {
+			edge_collision[0] = true;
+			this.position.x -= point.x;
+		}
+		else if(point.x > window.innerWidth) {
+			edge_collision[0] = true;
+			this.position.x -= point.x - window.innerWidth;
+		}
+		if(point.y < 0) {
+			edge_collision[1] = true;
+			this.position.y -= point.y;
+		}
+		else if(point.y > window.innerHeight) {
+			edge_collision[1] = true;
+			this.position.y -= point.y - window.innerHeight;
+		}
+
+		if(edge_collision[0]) {
+			this.velocity.x *= -0.8;
+			return true;
+		}
+		if(edge_collision[1]) {
+			this.velocity.y *= -0.8;
+			return true;
 		}
 
 		return false;
