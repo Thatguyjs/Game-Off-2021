@@ -1,4 +1,6 @@
 import Vec2 from "./include/vec2.mjs";
+
+import LevelInfo from "./level.mjs";
 import Player from "./player.mjs";
 import Bug from "./bug.mjs";
 
@@ -20,20 +22,17 @@ const Game = {
 
 	bugs: [],
 
-	walls: [
-		{ x: 100, y: 100, width: 10, height: 300 },
-		{ x: 100, y: 400, width: 300, height: 10 }
-	],
-
+	walls: [],
 	wall_attribs: {
 		position: { numComponents: 2, data: [] },
 		color: { numComponents: 4, data: [] },
 		indices: []
 	},
 
-	void: {
-		position: { numComponents: 2, data: new Float32Array([window.innerWidth / 2, window.innerHeight / 2]) },
-		size: { numComponents: 1, data: new Float32Array([80]) }
+	voids: [],
+	void_attribs: {
+		position: { numComponents: 2, data: [] },
+		size: { numComponents: 1, data: [] }
 	},
 
 	init(gl, programs, uniforms) {
@@ -42,16 +41,30 @@ const Game = {
 		this.void_program = programs.void;
 		this.uniforms = uniforms;
 
-		this.player = new Player(new Vec2(window.innerWidth / 4, window.innerHeight / 4));
+		this.player = new Player();
 		this.player_attribs.position.data = this.player.get_points();
 		this.player_attribs.color.data = (new Float32Array(16)).fill(1.0);
 
-		for(let i = 0; i < 10; i++)
-			this.bugs.push(new Bug(new Vec2(Math.random() * window.innerWidth, Math.random() * window.innerHeight)));
+		this.load_level(0);
+
+		// for(let i = 0; i < 10; i++)
+		// 	this.bugs.push(new Bug(new Vec2(Math.random() * window.innerWidth, Math.random() * window.innerHeight)));
 	},
 
-	// Construct wall attributes
-	update_walls() {
+	load_level(ind) {
+		this.player.position = LevelInfo[ind].player_start.position;
+		this.player.velocity = LevelInfo[ind].player_start.velocity;
+		this.player.rotation = LevelInfo[ind].player_start.rotation;
+
+		this.walls = LevelInfo[ind].walls;
+		this.voids = LevelInfo[ind].voids;
+
+		this.update_level();
+	},
+
+	// Construct level attributes for rendering
+	update_level() {
+		// Walls
 		this.wall_attribs.position.data = [];
 		this.wall_attribs.color.data = [];
 		this.wall_attribs.indices = [];
@@ -80,6 +93,17 @@ const Game = {
 				w * 4 + 1, w * 4 + 2, w * 4 + 3
 			);
 		}
+
+		// Voids
+		this.void_attribs.position.data = [];
+		this.void_attribs.size.data = [];
+
+		const void_num = this.voids.length;
+
+		for(let v = 0; v < void_num; v++) {
+			this.void_attribs.position.data.push(this.voids[v].x, this.voids[v].y);
+			this.void_attribs.size.data.push(this.voids[v].size);
+		}
 	},
 
 	// Assigns a bug to the player if once is close enough
@@ -106,11 +130,10 @@ const Game = {
 	},
 
 	update() {
-		this.update_walls();
 		this.player.update(this.walls);
 
 		for(let b in this.bugs)
-			this.bugs[b].update(this.void);
+			this.bugs[b].update();
 	},
 
 	render() {
@@ -152,13 +175,13 @@ const Game = {
 		twgl.setBuffersAndAttributes(this.gl, this.color_program, wall_buffers);
 		twgl.drawBufferInfo(this.gl, this.gl.TRIANGLES, wall_buffers);
 
-		// Render the void
-		// this.gl.useProgram(this.void_program.program);
-		// twgl.setUniforms(this.void_program, this.uniforms);
-        // 
-		// const void_buffers = twgl.createBufferInfoFromArrays(this.gl, this.void);
-		// twgl.setBuffersAndAttributes(this.gl, this.void_program, void_buffers);
-		// twgl.drawBufferInfo(this.gl, this.gl.POINTS, void_buffers);
+		// Render voids
+		this.gl.useProgram(this.void_program.program);
+		twgl.setUniforms(this.void_program, this.uniforms);
+
+		const void_buffers = twgl.createBufferInfoFromArrays(this.gl, this.void_attribs);
+		twgl.setBuffersAndAttributes(this.gl, this.void_program, void_buffers);
+		twgl.drawBufferInfo(this.gl, this.gl.POINTS, void_buffers);
 	}
 };
 
