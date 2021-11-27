@@ -18,8 +18,8 @@ class Vec2 {
 		if(x instanceof Vec2)
 			return this.sub(x.x, x.y);
 
-		this.x += x;
-		this.y += y ?? x;
+		this.x -= x;
+		this.y -= y ?? x;
 		return this;
 	}
 

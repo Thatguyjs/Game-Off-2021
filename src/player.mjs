@@ -1,4 +1,6 @@
 import Vec2 from "./include/vec2.mjs";
+
+import VoidInfo from "./void.mjs";
 import Game from "./game.mjs";
 
 
@@ -61,6 +63,11 @@ class Player {
 		window.removeEventListener('keyup', this.#keyup.bind(this));
 	}
 
+	is_passing(pass_zone) {
+		return (this.position.x > pass_zone.x && this.position.x < pass_zone.x + pass_zone.width) &&
+			(this.position.y > pass_zone.y && this.position.y < pass_zone.y + pass_zone.height);
+	}
+
 	update(walls) {
 		if(this.modifier !== Player.Modifiers.NO_CONTROL) {
 			let apply_vel = 0; // Forwards / backwards velocity
@@ -85,8 +92,7 @@ class Player {
 			this.rot_vel += apply_rot;
 		}
 
-		if(this.velocity.mag() > 1)
-			this.velocity.normalize();
+		this.velocity.add(VoidInfo.force_from(this.position));
 
 		/*
 		const void_dist = (new Vec2(
@@ -102,7 +108,7 @@ class Player {
 
 		if(void_dist.mag() < window.innerHeight)
 			this.velocity.add(force_dir.mult(void_force));
-		*/
+			*/
 
 		let points = null;
 

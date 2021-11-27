@@ -1,6 +1,7 @@
 import Vec2 from "./include/vec2.mjs";
 
 import LevelInfo from "./level.mjs";
+import VoidInfo from "./void.mjs";
 import Player from "./player.mjs";
 import Bug from "./bug.mjs";
 
@@ -8,9 +9,11 @@ import Bug from "./bug.mjs";
 const Game = {
 	gl: null,
 	color_program: null,
+	pass_program: null,
 	void_program: null,
 	uniforms: null,
 
+	level: 0,
 	paused: false,
 
 	player: null,
@@ -29,15 +32,25 @@ const Game = {
 		indices: []
 	},
 
-	voids: [],
+	// Voids are stored in VoidInfo
 	void_attribs: {
 		position: { numComponents: 2, data: [] },
 		size: { numComponents: 1, data: [] }
 	},
 
+	level_pass: null,
+	completion: 0,
+	pass_attribs: {
+		position: { numComponents: 2, data: null },
+		color: { numComponents: 4, data: null },
+		completion: { numComponents: 1, data: null },
+		indices: [0, 1, 2, 1, 2, 3]
+	},
+
 	init(gl, programs, uniforms) {
 		this.gl = gl;
 		this.color_program = programs.color;
+		this.pass_program = programs.pass;
 		this.void_program = programs.void;
 		this.uniforms = uniforms;
 
@@ -45,10 +58,7 @@ const Game = {
 		this.player_attribs.position.data = this.player.get_points();
 		this.player_attribs.color.data = (new Float32Array(16)).fill(1.0);
 
-		this.load_level(0);
-
-		// for(let i = 0; i < 10; i++)
-		// 	this.bugs.push(new Bug(new Vec2(Math.random() * window.innerWidth, Math.random() * window.innerHeight)));
+		this.load_level(this.level);
 	},
 
 	load_level(ind) {
@@ -57,7 +67,8 @@ const Game = {
 		this.player.rotation = LevelInfo[ind].player_start.rotation;
 
 		this.walls = LevelInfo[ind].walls;
-		this.voids = LevelInfo[ind].voids;
+		VoidInfo.voids = LevelInfo[ind].voids;
+		this.level_pass = LevelInfo[ind].level_pass;
 
 		this.update_level();
 	},
@@ -98,12 +109,29 @@ const Game = {
 		this.void_attribs.position.data = [];
 		this.void_attribs.size.data = [];
 
-		const void_num = this.voids.length;
+		const void_num = VoidInfo.voids.length;
 
 		for(let v = 0; v < void_num; v++) {
-			this.void_attribs.position.data.push(this.voids[v].x, this.voids[v].y);
-			this.void_attribs.size.data.push(this.voids[v].size);
+			this.void_attribs.position.data.push(VoidInfo.voids[v].x, VoidInfo.voids[v].y);
+			this.void_attribs.size.data.push(VoidInfo.voids[v].size);
 		}
+
+		// Level pass
+		this.pass_attribs.position.data = new Float32Array([
+			this.level_pass.x, this.level_pass.y,
+			this.level_pass.x + this.level_pass.width, this.level_pass.y,
+			this.level_pass.x, this.level_pass.y + this.level_pass.height,
+			this.level_pass.x + this.level_pass.width, this.level_pass.y + this.level_pass.height
+		]);
+
+		this.pass_attribs.color.data = new Float32Array([
+			0, 0.7, 0.2, 1,
+			0, 0.7, 0.2, 1,
+			0, 0.7, 0.2, 1,
+			0, 0.7, 0.2, 1
+		]);
+
+		this.pass_attribs.completion.data = new Float32Array([0, 0, 0, 0]);
 	},
 
 	// Assigns a bug to the player if once is close enough
@@ -129,11 +157,23 @@ const Game = {
 		this.player.bug = null;
 	},
 
-	update() {
+	update(time) {
+		this.uniforms.time = time;
+
 		this.player.update(this.walls);
+
+		if(this.player.is_passing(this.level_pass)) {
+			if(this.completion < 1)
+				this.completion += 0.01;
+			else
+				this.load_level(++this.level);
+		}
+		else this.completion = 0;
 
 		for(let b in this.bugs)
 			this.bugs[b].update();
+
+		this.pass_attribs.completion.data = new Float32Array([this.completion]);
 	},
 
 	render() {
@@ -174,6 +214,14 @@ const Game = {
 		const wall_buffers = twgl.createBufferInfoFromArrays(this.gl, this.wall_attribs);
 		twgl.setBuffersAndAttributes(this.gl, this.color_program, wall_buffers);
 		twgl.drawBufferInfo(this.gl, this.gl.TRIANGLES, wall_buffers);
+
+		// Render the level pass area
+		this.gl.useProgram(this.pass_program.program);
+		twgl.setUniforms(this.pass_program, this.uniforms);
+
+		const pass_buffers = twgl.createBufferInfoFromArrays(this.gl, this.pass_attribs);
+		twgl.setBuffersAndAttributes(this.gl, this.pass_program, pass_buffers);
+		twgl.drawBufferInfo(this.gl, this.gl.TRIANGLES, pass_buffers);
 
 		// Render voids
 		this.gl.useProgram(this.void_program.program);

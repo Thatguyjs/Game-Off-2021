@@ -27,11 +27,16 @@ class Bug {
 
 
 	get_points() {
+		const p1 = polar_to_cart(this.rotation + 45, 20, DEGREES);
+		const p2 = polar_to_cart(this.rotation + 135, 20, DEGREES);
+		const p3 = polar_to_cart(this.rotation + 225, 20, DEGREES);
+		const p4 = polar_to_cart(this.rotation + 305, 20, DEGREES);
+
 		return new Float32Array([
-			this.position.x - 20, this.position.y - 20,
-			this.position.x + 20, this.position.y - 20,
-			this.position.x - 20, this.position.y + 20,
-			this.position.x + 20, this.position.y + 20
+			p1.x + this.position.x, p1.x + this.position.y,
+			p2.x + this.position.x, p2.x + this.position.y,
+			p3.x + this.position.x, p3.x + this.position.y,
+			p4.x + this.position.x, p4.x + this.position.y,
 		]);
 	}
 }
