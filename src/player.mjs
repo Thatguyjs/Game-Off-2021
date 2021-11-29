@@ -29,6 +29,7 @@ class Player {
 	};
 
 	modifier = Player.NONE;
+	health = 100;
 
 	// Each point is described by an angle and radius
 	#points = [
@@ -94,26 +95,8 @@ class Player {
 
 		this.velocity.add(VoidInfo.force_from(this.position));
 
-		/*
-		const void_dist = (new Vec2(
-			void_info.position.data[0] - this.position.x,
-			void_info.position.data[1] - this.position.y
-		));
-
-		const void_force = (window.innerWidth - void_dist.mag()) / window.innerWidth;
-		const force_dir = polar_to_cart(Math.atan2(void_dist.y, void_dist.x), 0.023);
-
-		if(void_dist.mag() < void_info.size.data[0] + 8)
-			force_dir.mult(2);
-
-		if(void_dist.mag() < window.innerHeight)
-			this.velocity.add(force_dir.mult(void_force));
-			*/
-
-		let points = null;
-
 		this.position.x += this.velocity.x * 2.4;
-		points = this.get_points();
+		let points = this.get_points();
 
 		for(let p = 0; p < 8; p += 2)
 			if(this.collide_walls(new Vec2(points[p], points[p + 1]), [1, 0], walls)) break;
@@ -124,7 +107,6 @@ class Player {
 		for(let p = 0; p < 8; p += 2)
 			if(this.collide_walls(new Vec2(points[p], points[p + 1]), [0, 1], walls)) break;
 
-		// this.position.add(this.velocity.copy().mult(2.4));
 		this.rotation = (this.rotation + this.rot_vel) % 360;
 
 		if(this.rotation < 0)
@@ -146,7 +128,7 @@ class Player {
 
 	// Collide with the edges of the screen and walls
 	collide_walls(point, vel_mult, walls) {
-		const vel = this.velocity.copy().mult(vel_mult[0], vel_mult[1]);
+		// const vel = this.velocity.copy().mult(vel_mult[0], vel_mult[1]);
 
 		// Placed walls
 		for(let w in walls) {
@@ -278,6 +260,15 @@ class Player {
 		points[7] = p3.y + this.position.y;
 
 		return points;
+	}
+
+	get_points_health() {
+		return new Float32Array([
+			this.position.x - 20, this.position.y + 24,
+			this.position.x + 20, this.position.y + 24,
+			this.position.x - 20, this.position.y + 28,
+			this.position.x + 20, this.position.y + 28,
+		]);
 	}
 }
 

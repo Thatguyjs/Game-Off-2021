@@ -5,6 +5,8 @@ import VoidInfo from "./void.mjs";
 import Player from "./player.mjs";
 import Bug from "./bug.mjs";
 
+const level_display = document.getElementById('level-display');
+
 
 const Game = {
 	gl: null,
@@ -14,6 +16,7 @@ const Game = {
 	uniforms: null,
 
 	level: 0,
+	unlocked_level: 1, // Last unlocked level
 	paused: false,
 
 	player: null,
@@ -47,6 +50,12 @@ const Game = {
 		indices: [0, 1, 2, 1, 2, 3]
 	},
 
+	health_attribs: {
+		position: { numComponents: 2, data: null },
+		color: { numComponents: 4, data: null },
+		indices: []
+	},
+
 	init(gl, programs, uniforms) {
 		this.gl = gl;
 		this.color_program = programs.color;
@@ -58,10 +67,12 @@ const Game = {
 		this.player_attribs.position.data = this.player.get_points();
 		this.player_attribs.color.data = (new Float32Array(16)).fill(1.0);
 
-		this.load_level(this.level);
+		this.load_level(0);
 	},
 
 	load_level(ind) {
+		this.level = ind;
+
 		this.player.position = LevelInfo[ind].player_start.position;
 		this.player.velocity = LevelInfo[ind].player_start.velocity;
 		this.player.rotation = LevelInfo[ind].player_start.rotation;
@@ -69,6 +80,8 @@ const Game = {
 		this.walls = LevelInfo[ind].walls;
 		VoidInfo.voids = LevelInfo[ind].voids;
 		this.level_pass = LevelInfo[ind].level_pass;
+
+		level_display.innerText = ind === 0 ? "Tutorial" : `Level ${ind}`;
 
 		this.update_level();
 	},
@@ -132,6 +145,14 @@ const Game = {
 		]);
 
 		this.pass_attribs.completion.data = new Float32Array([0, 0, 0, 0]);
+
+		// Start spawning bugs
+		setTimeout(this.spawn_bug.bind(this, 0), 1000);
+	},
+
+	// Create a new bug
+	spawn_bug() {
+
 	},
 
 	// Assigns a bug to the player if once is close enough

@@ -7,9 +7,34 @@
 		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
-		<canvas id="cnv">Your browser doesn't support the HTML5 canvas!</canvas>
+		<div id="menu">
+			<h1>Game Off 2021</h1>
+			<div>
+				<button id="play">Play</button>
+				<button id="levels">Levels</button>
+			</div>
+		</div>
+
+		<div id="levels" class="hidden">
+			<h1>Levels</h1>
+			<div id="levels-container"></div>
+		</div>
+
+		<div id="level" class="hidden">
+			<span id="level-display"></span>
+			<canvas id="cnv">Your browser doesn't support the HTML5 canvas!</canvas>
+		</div>
+
+		<div id="level-fail" class="hidden">
+			<h1>Level Failed!</h1>
+			<p id="fail-text"></p>
+
+			<button id="restart-level">Retry [R]</button>
+		</div>
 
 		<script src="./include/twgl.js/dist/twgl-full.min.js"></script>
 		<script type="module" src="./main.mjs"></script>
+
+		<script type="module" src="./scene.mjs" defer></script>
 	</body>
 </html>
