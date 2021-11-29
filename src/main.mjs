@@ -1,3 +1,4 @@
+import Scene from "./scene.mjs";
 import Game from "./game.mjs";
 
 
@@ -49,7 +50,10 @@ function render(time) {
 	Game.update(time);
 	Game.render();
 
-	window.requestAnimationFrame(render);
+	if(Scene.get_scene() === 'level')
+		window.requestAnimationFrame(render);
 }
 
-window.requestAnimationFrame(render);
+Scene.on_scene('level', () => {
+	window.requestAnimationFrame(render);
+});

@@ -1,5 +1,6 @@
 import Vec2 from "./include/vec2.mjs";
 
+import Scene from "./scene.mjs";
 import LevelInfo from "./level.mjs";
 import VoidInfo from "./void.mjs";
 import Player from "./player.mjs";
@@ -72,6 +73,11 @@ const Game = {
 
 	load_level(ind) {
 		this.level = ind;
+
+		if(ind >= LevelInfo.length) {
+			Scene.set_scene('game-win');
+			return;
+		}
 
 		this.player.position = LevelInfo[ind].player_start.position;
 		this.player.velocity = LevelInfo[ind].player_start.velocity;
@@ -152,7 +158,7 @@ const Game = {
 
 	// Create a new bug
 	spawn_bug() {
-
+		this.bugs.push(new Bug(new Vec2(Math.random() * window.innerWidth, Math.random() * window.innerHeight)));
 	},
 
 	// Assigns a bug to the player if once is close enough

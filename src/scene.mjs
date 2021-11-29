@@ -20,6 +20,8 @@ const scene_list = [
 	"level-fail"
 ];
 
+let scene_callbacks = {};
+
 let scene = "menu";
 
 function set_scene(scene_name) {
@@ -28,6 +30,11 @@ function set_scene(scene_name) {
 	el(`#${scene}`).classList.add('hidden');
 	scene = scene_name;
 	el(`#${scene}`).classList.remove('hidden');
+
+	const callbacks = scene_callbacks[scene] ?? [];
+
+	for(let c in callbacks)
+		callbacks[c]();
 }
 
 
@@ -57,3 +64,19 @@ for(let l in LevelInfo) {
 		set_scene('level');
 	});
 }
+
+
+export default {
+	get_scene() {
+		return scene;
+	},
+
+	set_scene,
+
+	on_scene(scene_name, callback) {
+		if(!scene_callbacks[scene_name])
+			scene_callbacks[scene_name] = [];
+
+		scene_callbacks[scene_name].push(callback);
+	}
+};
