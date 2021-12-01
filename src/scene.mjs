@@ -13,13 +13,6 @@ function els(selector) {
 }
 
 
-const scene_list = [
-	"menu",
-	"levels",
-	"level",
-	"level-fail"
-];
-
 let scene_callbacks = {};
 
 let scene = "menu";
@@ -38,14 +31,29 @@ function set_scene(scene_name) {
 }
 
 
-// Menu buttons
-el('#play').addEventListener('click', () => {
-	Game.load_level(0);
-	set_scene('level');
+// Navigation buttons
+els('.nav-menu').forEach(e => {
+	e.addEventListener('click', () => {
+		set_scene('menu');
+	});
 });
 
-el('#levels').addEventListener('click', () => {
-	set_scene('levels');
+els('.nav-play').forEach(e => {
+	e.addEventListener('click', () => {
+		Game.load_level(Game.unlocked_level);
+		set_scene('level');
+	});
+});
+
+els('.nav-levels').forEach(e => {
+	e.addEventListener('click', () => {
+		set_scene('levels');
+	});
+});
+
+el('#restart-game').addEventListener('click', () => {
+	Game.unlocked_level = 0;
+	Game.level = 0;
 });
 
 
@@ -53,13 +61,19 @@ el('#levels').addEventListener('click', () => {
 for(let l in LevelInfo) {
 	const container = document.createElement('div');
 	const text = document.createElement('span');
-	text.innerText = l === '0' ? 'Tutorial' : `Level ${l}`;
+	text.innerText = LevelInfo[l].name;
 
 	container.appendChild(text);
+	container.classList.add('level');
 	if(Game.unlocked_level >= +l) container.classList.add('unlocked');
 	el('#levels-container').appendChild(container);
 
 	container.addEventListener('click', () => {
+		if(+l > Game.unlocked_level) {
+			alert("You haven't unlocked this level yet!");
+			return;
+		}
+
 		Game.load_level(+l);
 		set_scene('level');
 	});

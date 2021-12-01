@@ -2,21 +2,22 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>Game Off 2021</title>
+		<title>Space Bug</title>
 
 		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
 		<div id="menu">
-			<h1>Game Off 2021</h1>
+			<h1>Space Bug</h1>
 			<div>
-				<button id="play">Play</button>
-				<button id="levels">Levels</button>
+				<button class="nav-play">Play</button>
+				<button class="nav-levels">Levels</button>
 			</div>
 		</div>
 
 		<div id="levels" class="hidden">
 			<h1>Levels</h1>
+			<button class="nav-menu">Back</button>
 			<div id="levels-container"></div>
 		</div>
 
@@ -36,7 +37,7 @@
 			<h1>You win!</h1>
 			<p>Congrats! You beat every level!</p>
 
-			<button id="restart-game">Restart Game</button>
+			<button class="nav-menu" id="restart-game">Restart Game</button>
 		</div>
 
 		<script src="./include/twgl.js/dist/twgl-full.min.js"></script>

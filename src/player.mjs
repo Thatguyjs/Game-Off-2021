@@ -12,6 +12,9 @@ function polar_to_cart(angle, radius, mode=RADIANS) {
 	return new Vec2(Math.cos(angle) * radius, Math.sin(angle) * radius);
 }
 
+function dist(v1, v2) {
+	return Math.sqrt((v1.x - v2.x) ** 2 + (v2.y - v1.y) ** 2);
+}
 
 function point_box_collision(point, box) {
 	if(point.x > box.x && point.x < box.x + box.width && point.y > box.y && point.y < box.y + box.height)
@@ -29,7 +32,7 @@ class Player {
 	};
 
 	modifier = Player.NONE;
-	health = 100;
+	dead = false;
 
 	// Each point is described by an angle and radius
 	#points = [
@@ -69,7 +72,7 @@ class Player {
 			(this.position.y > pass_zone.y && this.position.y < pass_zone.y + pass_zone.height);
 	}
 
-	update(walls) {
+	update(walls, voids) {
 		if(this.modifier !== Player.Modifiers.NO_CONTROL) {
 			let apply_vel = 0; // Forwards / backwards velocity
 			let apply_rot = 0; // Rotational velocity
@@ -106,6 +109,13 @@ class Player {
 
 		for(let p = 0; p < 8; p += 2)
 			if(this.collide_walls(new Vec2(points[p], points[p + 1]), [0, 1], walls)) break;
+
+		for(let v in voids) {
+			if(dist(this.position, voids[v]) < voids[v].size) {
+				this.dead = true;
+				return;
+			}
+		}
 
 		this.rotation = (this.rotation + this.rot_vel) % 360;
 
@@ -219,6 +229,9 @@ class Player {
 
 	#keyup(ev) {
 		switch(ev.code) {
+			case 'Escape':
+				Game.to_menu();
+				break;
 			case 'ArrowUp':
 			case 'KeyW':
 				this.#keys.forward = false;

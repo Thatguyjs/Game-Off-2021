@@ -47,10 +47,6 @@ const LevelInfo = [
 			create_void(width / 2, height / 2, 50, 800, 0.35)
 		],
 		level_pass: rect(width - 200, height / 2 - 50, 100, 100)
-	},
-
-	{
-		name: "Level 2"
 	}
 ];
 

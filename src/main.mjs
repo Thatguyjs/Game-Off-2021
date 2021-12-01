@@ -47,8 +47,8 @@ function render(time) {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
-	Game.update(time);
-	Game.render();
+	if(Game.update(time))
+		Game.render();
 
 	if(Scene.get_scene() === 'level')
 		window.requestAnimationFrame(render);

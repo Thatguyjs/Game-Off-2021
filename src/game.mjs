@@ -2,6 +2,8 @@ import Vec2 from "./include/vec2.mjs";
 
 import Scene from "./scene.mjs";
 import LevelInfo from "./level.mjs";
+import GameStorage from "./storage.mjs";
+
 import VoidInfo from "./void.mjs";
 import Player from "./player.mjs";
 import Bug from "./bug.mjs";
@@ -17,7 +19,7 @@ const Game = {
 	uniforms: null,
 
 	level: 0,
-	unlocked_level: 1, // Last unlocked level
+	unlocked_level: 0, // Last unlocked level
 	paused: false,
 
 	player: null,
@@ -28,6 +30,7 @@ const Game = {
 	},
 
 	bugs: [],
+	level_bugs: 0, // Amount of bugs already spawned in the level
 
 	walls: [],
 	wall_attribs: {
@@ -68,7 +71,7 @@ const Game = {
 		this.player_attribs.position.data = this.player.get_points();
 		this.player_attribs.color.data = (new Float32Array(16)).fill(1.0);
 
-		this.load_level(0);
+		this.load_level(this.unlocked_level);
 	},
 
 	load_level(ind) {
@@ -79,8 +82,8 @@ const Game = {
 			return;
 		}
 
-		this.player.position = LevelInfo[ind].player_start.position;
-		this.player.velocity = LevelInfo[ind].player_start.velocity;
+		this.player.position = LevelInfo[ind].player_start.position.copy();
+		this.player.velocity = LevelInfo[ind].player_start.velocity.copy();
 		this.player.rotation = LevelInfo[ind].player_start.rotation;
 
 		this.walls = LevelInfo[ind].walls;
@@ -89,6 +92,10 @@ const Game = {
 
 		level_display.innerText = ind === 0 ? "Tutorial" : `Level ${ind}`;
 
+		this.level_bugs = 0;
+		this.bugs = [];
+
+		clearInterval(this.spawn_bug);
 		this.update_level();
 	},
 
@@ -153,12 +160,16 @@ const Game = {
 		this.pass_attribs.completion.data = new Float32Array([0, 0, 0, 0]);
 
 		// Start spawning bugs
-		setTimeout(this.spawn_bug.bind(this, 0), 1000);
+		setInterval(this.spawn_bug, 1500);
 	},
 
 	// Create a new bug
 	spawn_bug() {
+		if(this.level_bugs >= (this.level + 1) * 2 - 1)
+			return;
+
 		this.bugs.push(new Bug(new Vec2(Math.random() * window.innerWidth, Math.random() * window.innerHeight)));
+		this.level_bugs++;
 	},
 
 	// Assigns a bug to the player if once is close enough
@@ -171,7 +182,7 @@ const Game = {
 			if(bug_pos.x > player_pos.x - 30 && bug_pos.x < player_pos.x + 30 &&
 				bug_pos.y > player_pos.y - 30 && bug_pos.y < player_pos.y + 30) {
 				this.player.bug = this.bugs[b];
-				this.player.modifier = this.player.random_modifier();
+				// this.player.modifier = this.player.random_modifier();
 			}
 		}
 	},
@@ -185,15 +196,33 @@ const Game = {
 	},
 
 	update(time) {
+		if(this.player.dead) {
+			this.load_level(0);
+			this.player.dead = false;
+			return false;
+		}
+
 		this.uniforms.time = time;
 
-		this.player.update(this.walls);
+		this.player.update(this.walls, VoidInfo.voids);
 
-		if(this.player.is_passing(this.level_pass)) {
+		let all_bugs_dead = true;
+
+		for(let b in this.bugs) {
+			if(!this.bugs[b].dead) {
+				all_bugs_dead = false;
+				break;
+			}
+		}
+
+		if(this.player.is_passing(this.level_pass)) { // this.player.is_passing(this.level_pass) && this.bugs.length >= this.level_bugs && all_bugs_dead) {
 			if(this.completion < 1)
 				this.completion += 0.01;
-			else
+			else {
+				this.unlocked_level = this.level + 1;
+				GameStorage.save();
 				this.load_level(++this.level);
+			}
 		}
 		else this.completion = 0;
 
@@ -201,6 +230,7 @@ const Game = {
 			this.bugs[b].update();
 
 		this.pass_attribs.completion.data = new Float32Array([this.completion]);
+		return true;
 	},
 
 	render() {
@@ -229,6 +259,7 @@ const Game = {
 		total_attrs.color.data.fill(0.5);
 
 		for(let b = 0; b < bug_num; b++) {
+			if(this.bugs[b].dead) continue;
 			total_attrs.position.data.push(...this.bugs[b].get_points());
 			total_attrs.indices.push(b * 4, b * 4 + 1, b * 4 + 2, b * 4 + 1, b * 4 + 2, b * 4 + 3);
 		}
@@ -257,6 +288,12 @@ const Game = {
 		const void_buffers = twgl.createBufferInfoFromArrays(this.gl, this.void_attribs);
 		twgl.setBuffersAndAttributes(this.gl, this.void_program, void_buffers);
 		twgl.drawBufferInfo(this.gl, this.gl.POINTS, void_buffers);
+	},
+
+
+	// Go back to the menu
+	to_menu() {
+		Scene.set_scene('menu');
 	}
 };
 
@@ -266,4 +303,5 @@ window.addEventListener('resize', () => {
 });
 
 
+Game.spawn_bug = Game.spawn_bug.bind(Game);
 export default Game;
