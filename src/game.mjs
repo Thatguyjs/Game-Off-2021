@@ -215,7 +215,7 @@ const Game = {
 			}
 		}
 
-		if(this.player.is_passing(this.level_pass)) { // this.player.is_passing(this.level_pass) && this.bugs.length >= this.level_bugs && all_bugs_dead) {
+		if(this.player.is_passing(this.level_pass) && this.bugs.length >= this.level_bugs && all_bugs_dead) {
 			if(this.completion < 1)
 				this.completion += 0.01;
 			else {
